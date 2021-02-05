@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>MyApp</title>
+        <link rel="stylesheet" href="./css/style.css">
+    </head>
+    <body>
+        <h1>Titolo</h1>
+        <div class="form">
+            <label>Nome: </label><input type="text" id="name">
+            <label>Cognome: </label><input type="text" id="surname">
+            <label>Età: </label><input type="text" id="age">
+            <a id="link"><button type="submit" onclick="Submit()">Invio</button></a>
+        </div>
+        <div class="left-div">
+            <h2>Sottotitolo</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce non ultrices arcu, a sollicitudin ipsum. Curabitur ultricies ipsum id lorem molestie porttitor ac nec nisl. Etiam hendrerit mollis lacus vel egestas. Donec lobortis ipsum quis sapien blandit tempus. Pellentesque egestas, nibh et convallis fringilla, arcu felis ornare nisl, pellentesque commodo risus leo id turpis. Quisque viverra auctor neque, et venenatis tortor. Donec erat nisl, eleifend quis odio et, consectetur bibendum tortor. Morbi eget nibh sed tortor rutrum eleifend. Suspendisse sit amet velit dui. Nam sapien arcu, iaculis sed augue ut, vestibulum consequat nisi. Nam eu porttitor urna. Pellentesque aliquet lorem id nisi rhoncus ultrices.</p>
+        </div>
+        <div class="right-div">
+            <h2>Sottotitolo</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce non ultrices arcu, a sollicitudin ipsum. Curabitur ultricies ipsum id lorem molestie porttitor ac nec nisl. Etiam hendrerit mollis lacus vel egestas. Donec lobortis ipsum quis sapien blandit tempus. Pellentesque egestas, nibh et convallis fringilla, arcu felis ornare nisl, pellentesque commodo risus leo id turpis. Quisque viverra auctor neque, et venenatis tortor. Donec erat nisl, eleifend quis odio et, consectetur bibendum tortor. Morbi eget nibh sed tortor rutrum eleifend. Suspendisse sit amet velit dui. Nam sapien arcu, iaculis sed augue ut, vestibulum consequat nisi. Nam eu porttitor urna. Pellentesque aliquet lorem id nisi rhoncus ultrices.</p>
+        </div>
+        <div class="left-div">
+            <h2>Sottotitolo</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce non ultrices arcu, a sollicitudin ipsum. Curabitur ultricies ipsum id lorem molestie porttitor ac nec nisl. Etiam hendrerit mollis lacus vel egestas. Donec lobortis ipsum quis sapien blandit tempus. Pellentesque egestas, nibh et convallis fringilla, arcu felis ornare nisl, pellentesque commodo risus leo id turpis. Quisque viverra auctor neque, et venenatis tortor. Donec erat nisl, eleifend quis odio et, consectetur bibendum tortor. Morbi eget nibh sed tortor rutrum eleifend. Suspendisse sit amet velit dui. Nam sapien arcu, iaculis sed augue ut, vestibulum consequat nisi. Nam eu porttitor urna. Pellentesque aliquet lorem id nisi rhoncus ultrices.</p>
+        </div>
+        <div class="right-div">
+            <h2>Sottotitolo</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce non ultrices arcu, a sollicitudin ipsum. Curabitur ultricies ipsum id lorem molestie porttitor ac nec nisl. Etiam hendrerit mollis lacus vel egestas. Donec lobortis ipsum quis sapien blandit tempus. Pellentesque egestas, nibh et convallis fringilla, arcu felis ornare nisl, pellentesque commodo risus leo id turpis. Quisque viverra auctor neque, et venenatis tortor. Donec erat nisl, eleifend quis odio et, consectetur bibendum tortor. Morbi eget nibh sed tortor rutrum eleifend. Suspendisse sit amet velit dui. Nam sapien arcu, iaculis sed augue ut, vestibulum consequat nisi. Nam eu porttitor urna. Pellentesque aliquet lorem id nisi rhoncus ultrices.</p>
+        </div>
+        <div>
+            <img id="image" src="./img/image.jpg" alt="image">
+        </div>
+        <script>
+            const Submit = () => {
+                const link = document.getElementById("link")
+                const name = document.getElementById("name").value
+                const surname = document.getElementById("surname").value
+                const age = document.getElementById("age").value
+                link.setAttribute("href", `./doc?name=${name}&surname=${surname}&age=${age}`)
+            }
+        </script>
+    </body>
+</html>

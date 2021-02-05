@@ -1,0 +1,16 @@
+{{#if ospath}}
+    {{os}}
+{{/if}}
+
+{{#if homepath}}
+    {{#if name}}
+        <p>Ciao {{name}}</p>
+    {{/if}}
+    {{#if age}}
+        <p>Età: {{age}}</p>
+    {{/if}}
+    {{#if school}}
+        <p>Scuola: {{school}}</p>
+    {{/if}}
+    <a class="btn btn-primary" href="/os">OS</a>
+{{/if}}

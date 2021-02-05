@@ -1,0 +1,29 @@
+{
+  "name": "node_handlebars",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/D-Vitale/node_handlebars.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/D-Vitale/node_handlebars/issues"
+  },
+  "homepage": "https://github.com/D-Vitale/node_handlebars#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-handlebars": "^5.2.0",
+    "nodemon": "^2.0.6"
+  },
+  "devDependencies": {
+    "@soluzioni-futura/eslint-config-soluzioni-futura": "^1.2.0",
+    "eslint": "^7.14.0"
+  }
+}

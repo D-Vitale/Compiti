@@ -1,0 +1,26 @@
+h1 {
+    text-align: center;
+}
+
+.form {
+    width: 50%;
+    margin: auto;
+}
+
+.left-div {
+    margin-left: 2em;
+    width: 75%;
+}
+
+.right-div {
+    text-align: right;
+    margin-right: 2em;
+    margin-left: auto;
+    width: 75%;
+}
+
+#image {
+    display: block;
+    margin: auto;
+    text-align: center;
+}
