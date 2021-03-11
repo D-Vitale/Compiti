@@ -55,7 +55,7 @@ app.get("/", ({ query: { format } }, res) => {
   }
 })
 
-app.get("/score", ({ body: { team } }, res) => {
+app.post("/score", ({ body: { team } }, res) => {
   db.get("SELECT * FROM teams WHERE name = ?", team, (err, row) => {
     if (err) {
       throw err
@@ -70,9 +70,9 @@ app.get("/score", ({ body: { team } }, res) => {
   })
 })
 
-app.get("/fire", ({ body: { x, y, team } }, res) => {
+app.post("/fire", ({ body: { x, y, team } }, res) => {
   let hit = false
-  const cell = field[y - 1][x - 1]
+  const cell = field[y][x]
   const time = new Date().getTime()
   db.get("SELECT * FROM teams WHERE name = ?", team, (err, row) => {
     if (err) {
@@ -110,7 +110,7 @@ app.get("/fire", ({ body: { x, y, team } }, res) => {
         }
       })
       res.json({ message: "too fast" })
-    } else if ((time - row.lastlog) > 1000) {
+    } else if ((time - row.lastlog) >= 1000) {
       db.run("UPDATE teams SET lastlog = ? WHERE name = ?", [time, team], (err) => {
         if (err) {
           throw err
