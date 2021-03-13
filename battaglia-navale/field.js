@@ -41,7 +41,7 @@ module.exports.fillField = (w, h, s, field, ships) => {
     const maxHp = Math.floor(Math.random() * (6 - 2)) + 2
     const vertical = Math.random() < 0.5
     const ship = {
-      id: `nave ${count}`,
+      id: count,
       x,
       y,
       vertical,
@@ -57,6 +57,7 @@ module.exports.fillField = (w, h, s, field, ships) => {
         const x = ship.vertical ? ship.x : ship.x + e
         const y = ship.vertical ? ship.y + e : ship.y
         field[y][x].ship = ship
+        field[y][x].shipId = count
       }
       count ++
     }
