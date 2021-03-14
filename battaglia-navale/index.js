@@ -21,6 +21,7 @@ db.run(`CREATE TABLE IF NOT EXISTS teams (
   name VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL,
   score INT NOT NULL,
+  bulletsFired INT NOT NULL,
   lastlog VARCHAr(255) NOT NULL
 )`)
 
@@ -66,23 +67,35 @@ app.get("/", ({ query: { format } }, res) => {
 })
 
 app.post("/login", ({ body: { team, password } }, res) => {
-  const time = new Date().getTime()
-  db.run("INSERT INTO teams (name, password, score, lastlog) VALUES (?, ?, ?, ?)", [team, password, 0, time], (err) => {
+  db.get("SELECT * FROM teams WHERE name = ? AND password = ?", [team, password], (err, row) => {
     if (err) {
       throw err
+    } else if (row) {
+      res.status(409).json({
+        message: "Account già esistente",
+        username: row.name,
+        password: row.password,
+        score: row.score
+      })
     } else {
-      res.json({
-        message: "Registrazione avvenuta con successo",
-        username: team,
-        password,
-        score: 0
+      db.run("INSERT INTO teams (name, password, score, bulletsFired, lastlog) VALUES (?, ?, ?, ?, ?)", [team, password, 0, 0, 0], (err) => {
+        if (err) {
+          throw err
+        } else {
+          res.json({
+            message: "Registrazione avvenuta con successo",
+            username: team,
+            password,
+            score: 0
+          })
+        }
       })
     }
   })
 })
 
-app.post("/score", ({ body: { team } }, res) => {
-  db.get("SELECT * FROM teams WHERE name = ?", team, (err, row) => {
+app.post("/score", ({ body: { team, password } }, res) => {
+  db.get("SELECT * FROM teams WHERE name = ? AND password = ?", [team, password], (err, row) => {
     if (err) {
       throw err
     } if (row) {
@@ -91,7 +104,9 @@ app.post("/score", ({ body: { team } }, res) => {
         score: row.score
       })
     } else {
-      res.sendStatus(404)
+      res.status(401).json({
+        message: "Username o password errati"
+      })
     }
   })
 })
@@ -105,7 +120,9 @@ app.post("/fire", ({ body: { x, y, team, password } }, res) => {
     if (err) {
       throw err
     } if (!row) {
-      res.sendStatus(401)
+      res.status(401).json({
+        message: "Username o password errati"
+      })
     } else if ((time - row.lastlog) < 1000) {
       points = -1
       message = "too fast"
@@ -144,7 +161,7 @@ app.post("/fire", ({ body: { x, y, team, password } }, res) => {
         message = "casella già colpita"
         points = -1
       }
-      db.run("UPDATE teams SET score = ? WHERE name = ? AND password = ?", [row.score + points, team, password], (err) => {
+      db.run("UPDATE teams SET score = ?, bulletsFired = ? WHERE name = ? AND password = ?", [row.score + points, row.bulletsFired + 1, team, password], (err) => {
         if (err) {
           throw err
         }
@@ -154,6 +171,17 @@ app.post("/fire", ({ body: { x, y, team, password } }, res) => {
         hit: cell ? cell.ship ? true : false : false,
         message, points
       })
+    }
+  })
+})
+
+app.get("/standing", (req, res) => {
+  db.all("SELECT name, score, bulletsFired FROM teams ORDER BY score DESC, bulletsFired", (err, rows) => {
+    if (err) {
+      throw err
+    } else if (rows) {
+      const standing = rows.map((e, i) => ({ position: i + 1, team: e.name, score: e.score, bulletsFired: e.bulletsFired }))
+      res.json(standing)
     }
   })
 })
