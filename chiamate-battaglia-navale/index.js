@@ -4,8 +4,8 @@ const fetch = require("node-fetch")
 
 const port = 8000
 
-const team = "ciao"
-const password = "bolide"
+const team = "username"
+const password = "password"
 
 const login = () => {
   fetch("http://localhost:8080/login", {
