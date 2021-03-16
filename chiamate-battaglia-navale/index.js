@@ -59,4 +59,16 @@ const getField = () => {
 login()
 setInterval(getField, 1001)
 
+app.get("/score", (req, res) => {
+  fetch("http://localhost:8080/score", {
+    headers: {
+      "Content-Type": "application/json"
+    },
+    method: "POST",
+    body: JSON.stringify({ team, password })
+  })
+    .then(json => json.json())
+    .then(data => res.json({ data }))
+})
+
 app.listen(port, () => console.log("Listening on port", port))
