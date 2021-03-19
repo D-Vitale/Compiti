@@ -57,7 +57,7 @@ app.get("/", ({ query: { format } }, res) => {
     <body>
       <table>
         <tbody>
-          ${field.map(row => `<tr>${row.map(cell => `<td>${cell.ship ? cell.ship.id : "acqua"}</td>`).join("")}</tr>`).join("")}
+          ${field.map(row => `<tr>${row.map(cell => `<td>${cell.hit ? cell.ship ? cell.ship.id : "acqua" : "X"}</td>`).join("")}</tr>`).join("")}
         </tbody>
       </table>
     </body>
@@ -95,13 +95,14 @@ app.post("/login", ({ body: { team, password } }, res) => {
 })
 
 app.post("/score", ({ body: { team, password } }, res) => {
-  db.get("SELECT * FROM teams WHERE name = ? AND password = ?", [team, password], (err, row) => {
+  db.get("SELECT name, score, bulletsFired FROM teams WHERE name = ? AND password = ?", [team, password], (err, row) => {
     if (err) {
       throw err
     } if (row) {
       res.json({
         team: row.name,
-        score: row.score
+        score: row.score,
+        bulletsFired: row.bulletsFired
       })
     } else {
       res.status(401).json({
@@ -126,7 +127,7 @@ app.post("/fire", ({ body: { x, y, team, password } }, res) => {
     } else if ((time - row.lastlog) < 1000) {
       points = -1
       message = "too fast"
-      db.run("UPDATE teams SET score = ? WHERE name = ? AND password = ?", [row.score + points, team, password], (err) => {
+      db.run("UPDATE teams SET score = ?, bulletsFired = ? WHERE name = ? AND password = ?", [row.score + points, row.bulletsFired + 1, team, password], (err) => {
         if (err) {
           throw err
         }
@@ -155,7 +156,6 @@ app.post("/fire", ({ body: { x, y, team, password } }, res) => {
             message = "nave colpita"
             points = 1
           }
-          cell.name = team
         }
       } else if (cell.hit) {
         message = "casella già colpita"
