@@ -48,7 +48,8 @@ module.exports.fillField = (w, h, s, field, ships) => {
       maxHp,
       curHp: maxHp,
       alive: true,
-      killer: null
+      killer: null,
+      killerId: null
     }
 
     if (myFunction(field, ship)) {

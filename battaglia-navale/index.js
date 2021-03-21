@@ -18,6 +18,7 @@ const s = process.argv[4] || 10
 fillField(w, h, s, field, ships)
 
 db.run(`CREATE TABLE IF NOT EXISTS teams (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   name VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL,
   score INT NOT NULL,
@@ -97,13 +98,15 @@ app.post("/login", ({ body: { team, password } }, res) => {
 })
 
 app.post("/score", ({ body: { team, password } }, res) => {
-  db.get("SELECT name, score, bulletsFired FROM teams WHERE name = ? AND password = ?", [team, password], (err, row) => {
+  db.get("SELECT id, name, score, bulletsFired FROM teams WHERE name = ? AND password = ?", [team, password], (err, row) => {
     if (err) {
       throw err
     } if (row) {
+      const shipsKilled = ships.filter(e => e.killerId === row.id).map(e => ({ shipId: e.id, length: e.maxHp }))
       res.json({
         team: row.name,
         score: row.score,
+        shipsKilled: shipsKilled.length ? shipsKilled : null,
         bulletsFired: row.bulletsFired
       })
     } else {
@@ -118,7 +121,7 @@ app.post("/fire", ({ body: { x, y, team, password } }, res) => {
   const gameStatus = ships.some(e => e.alive)
 
   if (!gameStatus) {
-    res.status(400).json({ message: "Tutte le navi sono state affondate" })
+    return res.status(400).json({ message: "Tutte le navi sono state affondate" })
   }
 
   const cell = y < h && y >= 0 ? field[y][x] : null
@@ -162,6 +165,7 @@ app.post("/fire", ({ body: { x, y, team, password } }, res) => {
             ships[cell.ship.id].alive = false
             points = 3
             cell.ship.killer = row.name
+            cell.ship.killerId = row.id
           } else {
             message = "nave colpita"
             points = 1
@@ -186,11 +190,22 @@ app.post("/fire", ({ body: { x, y, team, password } }, res) => {
 })
 
 app.get("/standing", (req, res) => {
-  db.all("SELECT name, score, bulletsFired FROM teams ORDER BY score DESC, bulletsFired", (err, rows) => {
+  db.all("SELECT id, name, score, bulletsFired FROM teams ORDER BY score DESC, bulletsFired", (err, rows) => {
     if (err) {
       throw err
     } else if (rows) {
-      const standing = rows.map((e, i) => ({ position: i + 1, team: e.name, score: e.score, bulletsFired: e.bulletsFired }))
+      const standing = rows.map((team, i) => {
+        const shipsKilled = ships.filter(e => e.killerId === team.id).length
+        return (
+          {
+            position: i + 1,
+            team: team.name,
+            score: team.score,
+            shipsKilled,
+            bulletsFired: team.bulletsFired
+          }
+        )
+      })
       res.json(standing)
     }
   })
