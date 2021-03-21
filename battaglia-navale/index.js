@@ -26,6 +26,7 @@ db.run(`CREATE TABLE IF NOT EXISTS teams (
 )`)
 
 app.get("/", ({ query: { format } }, res) => {
+  const gameStatus = ships.some(e => e.alive)
   const visibleField = field.map(row => row.map(cell => (
     {
       team: cell.team,
@@ -60,6 +61,7 @@ app.get("/", ({ query: { format } }, res) => {
           ${field.map(row => `<tr>${row.map(cell => `<td>${cell.hit ? cell.ship ? cell.ship.id : "acqua" : "X"}</td>`).join("")}</tr>`).join("")}
         </tbody>
       </table>
+      ${gameStatus ? "" : "<p>TUTTE LE NAVI SONO STATE AFFONDATE</p>"}
     </body>
     </html>
 		`)
@@ -113,10 +115,17 @@ app.post("/score", ({ body: { team, password } }, res) => {
 })
 
 app.post("/fire", ({ body: { x, y, team, password } }, res) => {
-  const cell = y < h ? field[y][x] : null
+  const gameStatus = ships.some(e => e.alive)
+
+  if (!gameStatus) {
+    res.status(400).json({ message: "Tutte le navi sono state affondate" })
+  }
+
+  const cell = y < h && y >= 0 ? field[y][x] : null
   const time = new Date().getTime()
   let points = 0
   let message = "acqua"
+
   db.get("SELECT * FROM teams WHERE name = ? AND password = ?", [team, password], (err, row) => {
     if (err) {
       throw err
@@ -150,6 +159,7 @@ app.post("/fire", ({ body: { x, y, team, password } }, res) => {
           if (cell.ship.curHp === 0) {
             message = "nave affondata"
             cell.ship.alive = false
+            ships[cell.ship.id].alive = false
             points = 3
             cell.ship.killer = row.name
           } else {
