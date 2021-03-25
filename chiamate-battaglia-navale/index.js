@@ -20,7 +20,7 @@ const login = () => {
     .catch(err => console.error(err))
 }
 
-const hit = async(cell = null, possibleDir = null) => {
+const hit = async(cell = null) => {
   const { gameStatus, completeField, field } = await getField()
 
   if (!gameStatus) {
@@ -30,13 +30,6 @@ const hit = async(cell = null, possibleDir = null) => {
   if (!cell) {
     cell = getCasualCell(field, completeField)
   }
-
-  const upCondition = cell.y > 0 && !completeField[cell.y - 1][cell.x].hit
-  const bottomCondition = cell.y < completeField.length - 1 && !completeField[cell.y + 1][cell.x].hit
-  const leftCondition = cell.x > 0 && !completeField[cell.y][cell.x - 1].hit
-  const rigthCondition = cell.x < completeField[cell.y].length - 1 && !completeField[cell.y][cell.x + 1].hit
-
-  let data
 
   const reqParams = {
     headers: {
@@ -52,53 +45,12 @@ const hit = async(cell = null, possibleDir = null) => {
 
   try {
     const res = await fetch("http://localhost:8080/fire", reqParams)
-    data = await res.json()
+    const data = await res.json()
     console.log(data)
-
-    if (data.points === 1) {
-      const dir = possibleDir
-      if (dir === "up" && upCondition) {
-        setTimeout(hit, 1001, completeField[cell.y - 1][cell.x], "up")
-      } else if (dir === "down" && bottomCondition) {
-        setTimeout(hit, 1001, completeField[cell.y + 1][cell.x], "down")
-      } else if (dir === "left" &&  leftCondition) {
-        setTimeout(hit, 1001, completeField[cell.y][cell.x - 1], "left")
-      } else if (dir === "rigth" && rigthCondition) {
-        setTimeout(hit, 1001, completeField[cell.y][cell.x + 1], "rigth")
-      } else {
-        let count = 0
-        while (true) {
-          const directionList = ["up", "down", "left", "rigth"]
-          const direction = directionList[Math.floor(Math.random() * directionList.length)]
-
-          if (upCondition && direction === "up") {
-            setTimeout(hit, 1001, completeField[cell.y - 1][cell.x], "up")
-            break
-          } else if (bottomCondition && direction === "down") {
-            setTimeout(hit, 1001, completeField[cell.y + 1][cell.x], "down")
-            break
-          } else if (leftCondition && direction === "left") {
-            setTimeout(hit, 1001, completeField[cell.y][cell.x - 1], "left")
-            break
-          } else if (rigthCondition && direction === "rigth") {
-            setTimeout(hit, 1001, completeField[cell.y][cell.x + 1], "rigth")
-            break
-          } else if (count > 20) {
-            break
-          }
-          count ++
-        }
-        if (count > 20) {
-          setTimeout(hit, 1001)
-        }
-      }
-    } else {
-      setTimeout(hit, 1001)
-    }
+    setTimeout(hit, 1001)
   } catch (err) {
     console.error(err)
   }
-  return data
 }
 
 const getCasualCell = (field, completeField) => {
