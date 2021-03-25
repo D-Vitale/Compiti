@@ -20,8 +20,25 @@ const login = () => {
     .catch(err => console.error(err))
 }
 
-const hit = (cell) => {
-  fetch("http://localhost:8080/fire", {
+const hit = async(cell = null, possibleDir = null) => {
+  const { gameStatus, completeField, field } = await getField()
+
+  if (!gameStatus) {
+    return { msg: "Tutte le caselle sono state colpite" }
+  }
+
+  if (!cell) {
+    cell = getCasualCell(field, completeField)
+  }
+
+  const upCondition = cell.y > 0 && !completeField[cell.y - 1][cell.x].hit
+  const bottomCondition = cell.y < completeField.length - 1 && !completeField[cell.y + 1][cell.x].hit
+  const leftCondition = cell.x > 0 && !completeField[cell.y][cell.x - 1].hit
+  const rigthCondition = cell.x < completeField[cell.y].length - 1 && !completeField[cell.y][cell.x + 1].hit
+
+  let data
+
+  const reqParams = {
     headers: {
       "Content-Type": "application/json"
     },
@@ -31,33 +48,128 @@ const hit = (cell) => {
       x: cell.x,
       y: cell.y
     })
-  })
-    .then(res => res.json())
-    .then(data => console.log(data))
-    .catch(err => console.error(err))
+  }
+
+  try {
+    const res = await fetch("http://localhost:8080/fire", reqParams)
+    data = await res.json()
+    console.log(data)
+
+    if (data.points === 1) {
+      const dir = possibleDir
+      if (dir === "up" && upCondition) {
+        setTimeout(hit, 1001, completeField[cell.y - 1][cell.x], "up")
+      } else if (dir === "down" && bottomCondition) {
+        setTimeout(hit, 1001, completeField[cell.y + 1][cell.x], "down")
+      } else if (dir === "left" &&  leftCondition) {
+        setTimeout(hit, 1001, completeField[cell.y][cell.x - 1], "left")
+      } else if (dir === "rigth" && rigthCondition) {
+        setTimeout(hit, 1001, completeField[cell.y][cell.x + 1], "rigth")
+      } else {
+        let count = 0
+        while (true) {
+          const directionList = ["up", "down", "left", "rigth"]
+          const direction = directionList[Math.floor(Math.random() * directionList.length)]
+
+          if (upCondition && direction === "up") {
+            setTimeout(hit, 1001, completeField[cell.y - 1][cell.x], "up")
+            break
+          } else if (bottomCondition && direction === "down") {
+            setTimeout(hit, 1001, completeField[cell.y + 1][cell.x], "down")
+            break
+          } else if (leftCondition && direction === "left") {
+            setTimeout(hit, 1001, completeField[cell.y][cell.x - 1], "left")
+            break
+          } else if (rigthCondition && direction === "rigth") {
+            setTimeout(hit, 1001, completeField[cell.y][cell.x + 1], "rigth")
+            break
+          } else if (count > 20) {
+            break
+          }
+          count ++
+        }
+        if (count > 20) {
+          setTimeout(hit, 1001)
+        }
+      }
+    } else {
+      setTimeout(hit, 1001)
+    }
+  } catch (err) {
+    console.error(err)
+  }
+  return data
 }
 
-const getField = () => {
-  fetch("http://localhost:8080/?format=json")
-    .then(res => res.json())
-    .then(data => {
-      const tempField = data.visibleField.map(row => row.filter(cell => !cell.hit))
-      const endGame = !tempField.every(row => row.every(cell => !cell))
-      if (endGame) {
-        const field = tempField.filter(row => row.length > 0)
-        const yrandom = Math.floor(Math.random() * field.length)
-        const xrandom = Math.floor(Math.random() * field[yrandom].length)
-        const cell = field[yrandom][xrandom]
-        hit(cell)
-      } else {
-        console.log("Tutte le caselle sono state colpite")
+const getCasualCell = (field, completeField) => {
+  let cellShip = completeField.map(row => row.filter(e => e.ship)).filter(e => e.length > 0).flat()
+  cellShip = cellShip.filter(cell => cell.ship.alive)
+  let cell
+  cellShip.forEach(e => {
+    if (e) {
+      const upCondition = e.y > 0 && !completeField[e.y - 1][e.x].hit
+      const bottomCondition = e.y < completeField.length - 1 && !completeField[e.y + 1][e.x].hit
+      const leftCondition = e.x > 0 && !completeField[e.y][e.x - 1].hit
+      const rigthCondition = e.x < completeField[e.y].length - 1 && !completeField[e.y][e.x + 1].hit
+
+      let count = 0
+      while (true) {
+        const directionList = ["up", "down", "left", "rigth"]
+        const direction = directionList[Math.floor(Math.random() * directionList.length)]
+
+        if (upCondition && direction === "up") {
+          cell = completeField[e.y - 1][e.x]
+          break
+        } else if (bottomCondition && direction === "down") {
+          cell = completeField[e.y + 1][e.x]
+          break
+        } else if (leftCondition && direction === "left") {
+          cell = completeField[e.y][e.x - 1]
+          break
+        } else if (rigthCondition && direction === "rigth") {
+          cell = completeField[e.y][e.x + 1]
+          break
+        } else if (count > 20) {
+          break
+        }
+        count ++
       }
-    })
-    .catch(err => console.error(err))
+      return cell
+    }
+  })
+  if (!cell) {
+    const yrandom = Math.floor(Math.random() * field.length)
+    const xrandom = Math.floor(Math.random() * field[yrandom].length)
+    cell = field[yrandom][xrandom]
+    return cell
+  }
+  return cell
+}
+
+const getField = async() => {
+  let completeField
+
+  try {
+    let res = await fetch("http://localhost:8080/?format=json")
+    res = await res.json()
+    completeField = res.visibleField
+  } catch (err) {
+    console.error(err)
+  }
+
+  const tempField = completeField.map(row => row.filter(cell => !cell.hit))
+  const field = tempField.filter(row => row.length > 0)
+  const gameStatus = !tempField.every(row => row.every(cell => !cell))
+
+  if (gameStatus) {
+    return { gameStatus, completeField, field }
+  } else {
+    return { gameStatus }
+  }
 }
 
 login()
-setInterval(getField, 1001)
+hit()
 
 app.get("/score", (req, res) => {
   fetch("http://localhost:8080/score", {
