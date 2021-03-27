@@ -2,11 +2,13 @@ const express = require("express")
 const app = new express
 const sqlite = require("sqlite3").verbose()
 const db = new sqlite.Database(":memory:")
-const { fillField } = require("./field")
+const { fillField, renderField, getVisibleField } = require("./field")
+const { renderStanding } = require("./standing")
 
 const port = 8080
 
 app.use(express.json())
+app.use(express.static("public"))
 
 const field = []
 const ships = []
@@ -27,46 +29,69 @@ db.run(`CREATE TABLE IF NOT EXISTS teams (
 )`)
 
 app.get("/", ({ query: { format } }, res) => {
-  const gameStatus = ships.some(e => e.alive)
-  const visibleField = field.map(row => row.map(cell => (
-    {
-      team: cell.team,
-      x: cell.x,
-      y: cell.y,
-      hit: cell.hit,
-      ship: cell.hit ? cell.ship ? { id: cell.shipId, alive: cell.ship.alive, killer: cell.ship.killer } : null : null
-    }
-  )))
+  const visibleField = getVisibleField(field)
   if (format === "json") {
     res.json({ visibleField })
   } else {
     res.send(`
     <!DOCTYPE html>
     <html>
-    <head>
-      <title>battaglia navale</title>
-      <style>
-        table, td, th {
-          border: 1px solid black;
-        }
-        
-        table {
-          width: 50%;
-          border-collapse: collapse;
-        }
-      </style>
-    </head>
-    <body>
-      <table>
-        <tbody>
-          ${field.map(row => `<tr>${row.map(cell => `<td>${cell.hit ? cell.ship ? cell.ship.id : "acqua" : "X"}</td>`).join("")}</tr>`).join("")}
-        </tbody>
-      </table>
-      ${gameStatus ? "" : "<p>TUTTE LE NAVI SONO STATE AFFONDATE</p>"}
-    </body>
+      <head>
+        <title>battaglia navale</title>
+        <style>
+          #field table{
+            margin: 30px auto;
+          }
+
+          td {
+            border: 1px solid white;
+            width: 70px;
+            height: 70px;
+            display: inline-block;
+            background-size: 150px;
+            background-image: url(./water.gif);
+          }
+          
+          td.hit {
+            filter: blur(5px)
+          }
+
+          td.hit.ship {
+            filter: hue-rotate(165deg);
+          }
+
+          td.hit.ship.killed {
+            background-image: url(./killed.gif);
+            background-size: 100px;
+            filter: hue-rotate(0deg);
+          }
+
+          td.hit.ship {
+            background-image: url(./fire.gif);
+            background-size: 50px;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: hue-rotate(0deg);
+          }
+          
+          table {  
+            border-collapse: collapse;
+          }
+        </style>
+      </head>
+      <body>
+        <div id="field">
+          ${renderField(visibleField)}
+        </div>
+        <script src="./script.js"></script>
+      </body>
     </html>
 		`)
   }
+})
+
+app.get("/getHtmlField", (req, res) => {
+  res.send(renderField(getVisibleField(field)))
 })
 
 app.post("/login", ({ body: { team, password } }, res) => {
@@ -189,7 +214,7 @@ app.post("/fire", ({ body: { x, y, team, password } }, res) => {
   })
 })
 
-app.get("/standing", (req, res) => {
+app.get("/standing", ({ query: { format } }, res) => {
   db.all("SELECT id, name, score, bulletsFired FROM teams ORDER BY score DESC, bulletsFired", (err, rows) => {
     if (err) {
       throw err
@@ -206,7 +231,105 @@ app.get("/standing", (req, res) => {
           }
         )
       })
-      res.json(standing)
+
+      if (format === "json") {
+        return res.json({ standing })
+      }
+
+      res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>battaglia navale</title>
+          <style>
+            .ptable table{
+              margin: 30px auto;
+            }
+            
+            .ptable{
+              margin: 0px 0% 30px 0%;
+            }
+            
+            th, td {
+              padding: 10px;
+              border-bottom: 1px solid black;
+            }
+            
+            .headin{
+              text-align: center;
+              text-decoration: none;
+              margin: 30px;
+              display: block;
+            }
+            
+            .wpos{
+              text-align: center;
+            }
+            
+            .wpos td{
+              color: #00cc44;
+            }
+            
+            .pos{
+              text-align: center;
+            }
+            
+            .pos td{
+              color: #00001a;
+            }
+            
+            table .col{
+              border-bottom: 1px solid black;
+            }
+            
+            .wpos:hover{
+              background-color: #77ff21;
+            }
+            
+            .wpos:hover td{
+              color: #000000;
+            }
+            
+            .pos:hover{
+              background-color: #ff7b21;
+            }
+            
+            .pos:hover td{
+              color: #000000;
+            }
+          </style>
+        </head>
+        <body>
+          <div id="standing" class="ptable">
+            ${renderStanding(standing)}
+          </div>
+          <script src="./script.js"></script>
+        </body>
+      </html>
+      `)
+    }
+  })
+})
+
+app.get("/getHtmlStanding", (req, res) => {
+  db.all("SELECT id, name, score, bulletsFired FROM teams ORDER BY score DESC, bulletsFired", (err, rows) => {
+    if (err) {
+      throw err
+    } else if (rows) {
+      const standing = rows.map((team, i) => {
+        const shipsKilled = ships.filter(e => e.killerId === team.id).length
+        return (
+          {
+            position: i + 1,
+            team: team.name,
+            score: team.score,
+            shipsKilled,
+            bulletsFired: team.bulletsFired
+          }
+        )
+      })
+
+      res.send(renderStanding(standing))
     }
   })
 })

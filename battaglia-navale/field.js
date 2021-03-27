@@ -64,3 +64,25 @@ module.exports.fillField = (w, h, s, field, ships) => {
     }
   }
 }
+
+module.exports.renderField = (field) => {
+  return (`
+  <table>
+    <tbody>
+      ${field.map(row => `<tr>${row.map(cell => `<td class="${cell.hit ? "hit " : ""}${cell.hit && cell.ship ? "ship " : ""}${cell.ship?.alive ? "" : "killed "}"></td>`).join("")}</tr>`).join("")}
+    </tbody>
+  </table>
+`)
+}
+
+module.exports.getVisibleField = (field) => {
+  return field.map(row => row.map(cell => (
+    {
+      team: cell.team,
+      x: cell.x,
+      y: cell.y,
+      hit: cell.hit,
+      ship: cell.hit ? cell.ship ? { id: cell.shipId, alive: cell.ship.alive, killer: cell.ship.killer } : null : null
+    }
+  )))
+}
