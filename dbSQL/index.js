@@ -2,7 +2,7 @@ const mysql = require("mysql")
 
 const classi = ["1A", "2B", "3C", "4D", "5E"]
 const nomi = ["Luca", "Andrea", "Francesco", "Davide", "Simone", "Chiara", "Matteo", "Filippo", "Giacomo", "Salvatore", "Giuseppe", "Antonio", "Giulia", "Marco", "Francesca", "Maria", "Michela", "Rachele", "Martina", "Siria", "Beatrice", "Asia", "Sofia"]
-const cognomi = ["Rossi", "Russo", "Ferrari", "Esposito", "Bianchi", "Romano", "Colombo", "Ricci", "Marino", "Greco", "Bruno", "Gallo", "Conti", "De Luca", "Mancini", "Costa", "Giordano", "Rizzo", "Moretti", "Baribieri"]
+const cognomi = ["Rossi", "Russo", "Ferrari", "Esposito", "Bianchi", "Romano", "Colombo", "Ricci", "Marino", "Greco", "Bruno", "Gallo", "Conti", "De Luca", "Mancini", "Costa", "Giordano", "Rizzo", "Moretti", "Barbieri"]
 const materie = [
   { sigla: "ITA", nome: "Italiano" },
   { sigla: "MAT", nome: "Matematica" },
@@ -15,13 +15,17 @@ let studenti = []
 let docenti = []
 
 const createPeople = () => {
-  let cognomipossibili = cognomi
   for (let i = 0; i < 7; i++) {
+    let alreadyExists = false
     const classe = classi[Math.floor(Math.random() * classi.length)]
     const nome = nomi[Math.floor(Math.random() * nomi.length)]
-    const cognome = cognomipossibili[Math.floor(Math.random() * cognomipossibili.length)]
-    studenti.push({ classe, cognome, nome })
-    cognomipossibili = cognomipossibili.filter(e => e !== cognome)
+    const cognome = cognomi[Math.floor(Math.random() * cognomi.length)]
+    studenti.forEach(e => {
+      if (e.cognome === cognome && e.classe === classe) {
+        alreadyExists = true
+      }
+    })
+    alreadyExists ? alreadyExists : studenti.push({ classe, cognome, nome })
   }
 
   for (let i = 0; i < 5; i++) {
